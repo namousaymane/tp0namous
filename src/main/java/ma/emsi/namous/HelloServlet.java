@@ -1,4 +1,4 @@
-package ht.mbds.namous.tp0namous;
+package ma.emsi.namous;
 
 import java.io.*;
 
