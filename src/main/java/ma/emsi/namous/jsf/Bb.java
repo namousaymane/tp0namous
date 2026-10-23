@@ -52,6 +52,12 @@ public class Bb implements Serializable {
      */
     private StringBuilder conversation = new StringBuilder();
 
+
+    private int nombreMystere = 1 + (int) (Math.random() * 20);
+    private int nombreEssais = 0;
+    private boolean partieTerminee = false;
+
+
     /**
      * Service pour modifier la question et générer la réponse.
      */
@@ -119,26 +125,48 @@ public class Bb implements Serializable {
      *
      * @return null pour rester sur la même page.
      */
+
     public String envoyer() {
         if (question == null || question.isBlank()) {
-            // Erreur ! Le formulaire va être réaffiché en réponse à la requête POST, avec un message d'erreur.
-            FacesMessage message = new FacesMessage(FacesMessage.SEVERITY_ERROR,
-                    "Texte question vide", "Il manque le texte de la question");
+            FacesMessage message = new FacesMessage(
+                    FacesMessage.SEVERITY_ERROR,
+                    "Texte question vide",
+                    "Il manque le texte de la question"
+            );
             facesContext.addMessage(null, message);
             return null;
         }
 
-        // Traite la question pour construire la réponse.
-        String roleSystemePourModification = null;
-        if (this.conversation.isEmpty()) { // Si la conversation n'a pas encore commencé
-            roleSystemePourModification = this.roleSysteme; // Pour GenerateurReponse.modifier()
-            // Fige la liste déroulante qui permet de choisir le rôle système
-            this.roleSystemeChangeable = false;
+        if (partieTerminee) {
+            reponse = "Partie terminée ! Clique sur Nouveau chat pour rejouer.";
+            afficherConversation();
+            return null;
         }
-        this.reponse += this.generateurReponse.genererReponse(this.question, roleSystemePourModification);
 
-        // La conversation contient l'historique des questions-réponses depuis le début.
+        if (conversation.isEmpty()) {
+            roleSystemeChangeable = false;
+        }
+
+        try {
+            int proposition = Integer.parseInt(question.trim());
+
+            if (proposition >= 1 && proposition <= 20) {
+                nombreEssais++;
+            }
+        } catch (NumberFormatException e) {
+            // Une saisie non numérique ne compte pas comme un essai.
+        }
+
+        reponse = generateurReponse.genererReponse(
+                question, nombreMystere, nombreEssais
+        );
+
+        if (reponse.startsWith("Bravo")) {
+            partieTerminee = true;
+        }
+
         afficherConversation();
+
         return null;
     }
 
